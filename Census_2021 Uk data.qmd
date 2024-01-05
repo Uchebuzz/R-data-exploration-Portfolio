@@ -1,0 +1,205 @@
+---
+title: "Does the gender paygap really exist?"
+format:
+  html:
+    code-fold: true
+    code-link: true
+    embed-resources: true
+    toc: true
+    number-sections: true
+bibliography: references.bib
+---
+
+# Introduction
+
+In recent times the heated debate about gender pay disparities has taken center stage, and it becomes increasingly apparent that the intricacies of wage gaps cannot be universally painted with a single brushstroke. [@blau2017]
+
+Contrary to the prevailing notion, the earnings of women in the workforce are not solely dictated by their gender. Gender alone is not what determines how much wage a person earns Rather, multiple factors come into play, such as educational achievements and individual competence.
+
+This study not only challenges this conventional thought process but also sheds light on a surprising revelation: on average, women earn more than their male counterparts(according to this `dataset`). In the following sections, I will share my findings with this `dataset.`
+
+# The Data
+
+This data set is a snapshot of a small part of England's households in a 2021 census. The dataset is rich with lots of columns, here they are:
+
+-   `ID` - Household identification number.
+-   `Person_ID` - Individual ID number for persons in the household.
+-   `Age` - Age.
+-   `Mar_Stat` - Marital Status.
+-   `INC` - Annual income in pounds.
+-   `Female` - A binary variable that signals whether or not the individual has identified as female (0 = yes).
+-   `H8` - A binary variable signaling the response to question H8 on the census. Are all the rooms in this accommodation, including the kitchen, bathroom and toilet, behind a door that only this household can use?; 1=no, 0=yes.
+-   `Eth` - Ethnicity.
+-   `Highest Ed` - Highest level of study.
+
+## Data Summary
+
+For this study, we will be looking at the Income gap disparity between males and females living in the community, so our focus will be on the columns `Gender`, `Age`, `INC` and `Highest Ed`
+
+# The Interesting Thing About The Data
+
+Let's install the necessary packages for this: We will be using `ggplot` [@ggplot2], `ggthemes` [@ggthemes], `Tidyverse` [@tidyverse] and `dplyr` [@dplyr]
+
+```{r}
+#|label: loading packages
+#|include : false
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+```
+
+Let's read the data set into `Rstudio`
+
+```{r}
+#|label: Reading the Census data
+#|include : false
+Census_data <- read_csv("C:/Users/Uche Buzz/Desktop/Assement/Census_data.csv")
+```
+
+Let's view the head of the `dataset`, to understand the data
+
+```{r}
+#|label: Reading the Census data
+#|include : false
+View(Census_data)
+View(head(Census_data))
+```
+
+## TIDY THE DATA
+
+There is a need to tidy the data, so we can easily work with it, to do this: I renamed the columns \[`Gender` and `Highest_Ed`\]
+
+I also mutated the column previously named 'female'( 1 for female and 0 for male) to a more appropriate name `Gender`
+
+```{r}
+#|label: Tidying the data
+#|include: false
+Tidy_Censusdata <- Census_data |>  
+  mutate(Female = ifelse (Female == 0, "female", "male")) |>
+  rename (Gender = Female,Highest_Ed =`Highest Ed`)
+```
+
+One last tidying, before we start working on the data, Since we are not interested in null values in any of the columns, we will get rid of it with a simple line of code and rename `Census_data`
+
+```{r}
+#|label: Tidying the data
+Tidy_Censusdata2 <- na.omit(Tidy_Censusdata)
+```
+
+Let's `Select` the part of the data that is necessary to us in this project which is `Gender`, `Age`, `INC,` and `Highest Ed` and assign the function `df`, which is what we will work with as we go on\`
+
+```{r}
+#|include : false
+df <- Tidy_Censusdata2 |>
+  select(Highest_Ed, INC, Age, Gender)
+
+View(df)
+
+```
+
+Now, that we have selected the part of the data we need to extract the insight we need, let's get to the juicy part of the project to extract the Juice from this data - Come along...
+
+```{r}
+#|include : false
+number_of_males <- sum(df$Gender == "male")
+
+number_of_females <- sum(df$Gender == "female")
+```
+
+From here we see that we have **10,164 females** and **11,073 males.** We have more males than females in this `dataset`, but let's see the average income of each of them.
+
+For males:
+
+```{r}
+#|include : false
+
+mean_male_income <- df |>
+  filter(Gender == "male") |>
+  summarize(mean_income = mean(INC))
+
+print(mean_male_income)
+```
+
+for females:
+
+```{r}
+#|include : false
+mean_Female_income <- df |>
+  filter(Gender == "female") |>
+  summarize(mean_income = mean(INC))
+
+print(mean_Female_income)
+```
+
+##Visualize the data Despite having more males than females in the `dataset`, we see that the average female makes more money than the average male in this `dataset` Now, let's `visualise` this with `ggplot`
+
+```{r}
+#|include : false
+ggplot(df, aes(x = Gender, y = INC, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Income Distribution Comparison", x = "Gender", y = "Income")
+
+ggplot(df, aes(x = Gender, y = INC, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Average Income Comparison", x = "Gender", y = "Income")
+```
+
+Now, we might make the argument that maybe most males in this `datset` are either uneducated or not up to ages to be making money, so its not a plain level field. So, we will look at the most educated among both genders and also the average ages of those in this `dataset`. Lets see the average age range of both males and females for male
+
+```{r}
+#|include : false
+df <- df |>
+  group_by(Gender) |>                  # Group by gender
+  mutate(Mean_Age = mean(Age)) |>       # Calculate the mean age for each group
+  ungroup() 
+
+View(df)
+
+```
+
+For Males, the age is **44.7** For Females the age is **42.9**
+
+From this we see that Let's Consider Education, I am going to be seeing which gender has the more educated set. *This may result in higher pay.*
+
+```{r}
+#|include : false
+male_education_count <- df |>
+  filter(Gender == "male") |>
+  summarize(male_Education = sum(
+    Highest_Ed == "Bachelors Degree" | Highest_Ed == "Masters or higher"))
+print(male_education_count)
+```
+
+For female
+
+```{r}
+#|include : false
+female_education_count <- df |>
+  filter(Gender == "female") |>
+  summarize(female_Education = sum(
+    Highest_Ed == "Bachelors Degree" | Highest_Ed == "Masters or higher"))
+print(female_education_count)
+```
+
+From this we realize that we have more educated females than educated males in this `dataset` and this could be a factor that leads to this pay-gap.
+
+```{r}
+#|include : false
+  ggplot(df, aes(x = Age, y = Highest_Ed, fill = Gender)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Average Educational Comparison", x = "Educational status", y = "Age")
+
+ggplot(df, aes(x = Age, y = Highest_Ed, color = Gender)) +
+  geom_point(size = 3) +
+  labs(
+    title = "Average Educational Comparison by Age and Gender",
+    x = "Age",
+    y = "Educational status"
+  ) +
+  theme_minimal()
+```
+
+# Conclusion
+
+This result suggests that the gender pay gap isn't **universally applicable** in all situations. A woman's lower earnings compared to a man's may be attributed to a range of factors beyond their gender. Educational attainment and individual competence could be significant contributors. This `dataset` indicates that, **on average, women actually earn more than men**.
