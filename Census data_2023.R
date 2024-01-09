@@ -30,14 +30,9 @@ Mar_ed <- Tidy_data |>
 df <- Tidy_data |>
   select(Highest_Ed, Mar_Stat, INC, Gender, Age)
 
-
-
 df|>
   ggplot(aes(x = Age, y = INC)) +
   geom_bar(stat = "identity") 
-
-
-
 
 
 
